@@ -32,9 +32,23 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
+import collections
+
 from gw2 import currencies
 from gw2 import rest
 from gw2 import tools
+
+AccountWallet = collections.namedtuple(
+	'AccountWallet',
+	(
+		'coin',
+		'gem',
+		'guild_commendation',
+		'karma',
+		'laurel',
+		'transmutation_charge'
+	)
+)
 
 class Account(object):
 	__slots__ = ('_api',)
@@ -54,3 +68,18 @@ class Account(object):
 	def coins(self):
 		wallet = tools.index_by(self._api.account_wallet(), 'id')
 		return currencies.Coins(wallet[1]['value'])
+
+	@property
+	def wallet(self):
+		gw2_currencies = self._api.currencies()
+		gw2_currencies = tools.index_by(self._api.currencies(gw2_currencies), 'id')
+		wallet_contents = dict(zip(AccountWallet._fields, (None for _ in AccountWallet._fields)))
+		wallet = self._api.account_wallet()
+		for item in wallet:
+			currency_name = gw2_currencies[item['id']]['name'].lower().replace(' ', '_')
+			if not currency_name in wallet_contents:
+				continue
+			if currency_name == 'coin':
+				item['value'] = currencies.Coins(item['value'])
+			wallet_contents[currency_name] = item['value']
+		return AccountWallet(**wallet_contents)
