@@ -34,52 +34,100 @@
 
 import collections
 
-from gw2 import currencies
-from gw2 import rest
-from gw2 import tools
+import gw2.currencies
+import gw2.rest
+import gw2.tools
 
-AccountWallet = collections.namedtuple(
-	'AccountWallet',
-	(
-		'coin',
-		'gem',
-		'guild_commendation',
-		'karma',
-		'laurel',
-		'transmutation_charge'
-	)
-)
+TradingPostPrice = collections.namedtuple('TradingPostPrice', ('buy', 'sell'))
 
-class Account(object):
-	__slots__ = ('_api',)
+class AccountProperty(object):
 	def __init__(self, api):
 		if isinstance(api, str):
-			api = rest.GuildWars2ApiV2(token=api)
-		if not isinstance(api, rest.GuildWars2ApiV2):
+			api = gw2.rest.GuildWars2ApiV2(token=api)
+		if not isinstance(api, gw2.rest.GuildWars2ApiV2):
 			raise TypeError('api needs to be a GuildWars2ApiV2 instance')
 		self._api = api
+		self.refresh()
 
-	@property
-	def characters(self):
-		character_names = self._api.characters()
-		return tools.index_by(self._api.characters(character_names), 'name')
+	def refresh(self):
+		raise NotImplemented()
 
-	@property
-	def coins(self):
-		wallet = tools.index_by(self._api.account_wallet(), 'id')
-		return currencies.Coins(wallet[1]['value'])
+class AccountTransactions(AccountProperty):
+	__slots__ = ('_api', '_items_info', '_items_prices', 'bought', 'buying', 'selling', 'sold')
+	def refresh(self):
+		self.bought = self._api.commerce_transactions_history_buys()
+		self.buying = self._api.commerce_transactions_current_buys()
+		self.selling = self._api.commerce_transactions_current_sells()
+		self.sold = self._api.commerce_transactions_history_sells()
 
-	@property
-	def wallet(self):
+		item_ids = set()
+		for records in (self.bought, self.buying, self.selling, self.sold):
+			for item in records:
+				item_ids.add(item['item_id'])
+		self._items_info = self._api.items(ids=item_ids)
+		self._items_prices = gw2.tools.index_by(self._api.commerce_prices(ids=item_ids), 'id')
+
+	def item_by_id(self, item_id):
+		for item in self._items_info:
+			if item['id'] == item_id:
+				return item
+		raise ValueError('id not found')
+
+	def item_by_name(self, item_name):
+		for item in self._items_info:
+			if item['name'] == item_name:
+				return item
+		raise ValueError('name not found')
+
+	def item_price_by_id(self, item_id):
+		price = self._items_prices[item_id]
+		price = TradingPostPrice(
+			buy=gw2.currencies.Coins(price['buys']['unit_price']),
+			sell=gw2.currencies.Coins(price['sells']['unit_price']))
+		return price
+
+	def item_price_by_name(self, item_name):
+		item_id = self.item_by_name(item_name)['id']
+		return self.item_price_by_id(item_id)
+
+class AccountWallet(AccountProperty):
+	__slots__ = ('_api', 'coin', 'gem', 'guild_commendation', 'karma', 'laurel', 'transmutation_charge')
+	def refresh(self):
 		gw2_currencies = self._api.currencies()
-		gw2_currencies = tools.index_by(self._api.currencies(gw2_currencies), 'id')
-		wallet_contents = dict(zip(AccountWallet._fields, (None for _ in AccountWallet._fields)))
+		gw2_currencies = gw2.tools.index_by(self._api.currencies(gw2_currencies), 'id')
+		wallet_contents = dict(zip(self.__slots__, (None for _ in self.__slots__)))
 		wallet = self._api.account_wallet()
 		for item in wallet:
 			currency_name = gw2_currencies[item['id']]['name'].lower().replace(' ', '_')
 			if not currency_name in wallet_contents:
 				continue
 			if currency_name == 'coin':
-				item['value'] = currencies.Coins(item['value'])
-			wallet_contents[currency_name] = item['value']
-		return AccountWallet(**wallet_contents)
+				item['value'] = gw2.currencies.Coins(item['value'])
+			setattr(self, currency_name, item['value'])
+
+class Account(object):
+	__slots__ = ('_api',)
+	def __init__(self, api):
+		if isinstance(api, str):
+			api = gw2.rest.GuildWars2ApiV2(token=api)
+		if not isinstance(api, gw2.rest.GuildWars2ApiV2):
+			raise TypeError('api needs to be a GuildWars2ApiV2 instance')
+		self._api = api
+
+	@property
+	def characters(self):
+		character_names = self._api.characters()
+		return gw2.tools.index_by(self._api.characters(character_names), 'name')
+
+	@property
+	def coins(self):
+		wallet = gw2.tools.index_by(self._api.account_wallet(), 'id')
+		return gw2.currencies.Coins(wallet[1]['value'])
+
+	@property
+	def transactions(self):
+		return AccountTransactions(self._api)
+
+	@property
+	def wallet(self):
+		return AccountWallet(self._api)

@@ -34,5 +34,6 @@
 
 __version__ = (0, 9)
 
+from .account import Account
 from .currencies import Coins
 from .rest import GuildWars2ApiV2

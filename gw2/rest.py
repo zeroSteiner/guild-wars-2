@@ -38,7 +38,7 @@ class ApiError(Exception):
 	pass
 
 def _flatten_ids(ids):
-	if isinstance(ids, (list, tuple)):
+	if isinstance(ids, (list, set, tuple)):
 		ids = map(str, ids)
 		ids = ','.join(ids)
 	elif ids is not None:
