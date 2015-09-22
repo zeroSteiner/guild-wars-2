@@ -32,6 +32,8 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
+import dateutil.parser
+
 from gw2.currencies import Coins
 
 def index_by(items, key, value=None):
@@ -44,6 +46,9 @@ def index_by(items, key, value=None):
 			i_value = i[value]
 		index[i_key] = i_value
 	return index
+
+def parse_timestamp(ts):
+	return dateutil.parser.parse(ts)
 
 def trade_profit(buy_price, sell_price):
 	buy_price = float(buy_price)

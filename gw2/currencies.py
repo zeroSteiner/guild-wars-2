@@ -100,9 +100,9 @@ class Coins(object):
 		if isinstance(coins, Coins):
 			coins = coins._value
 		copper = coins % 100
-		coins /= 100
+		coins //= 100
 		silver = coins % 100
-		coins /= 100
+		coins //= 100
 		gold = coins
 		value = []
 		if gold:
