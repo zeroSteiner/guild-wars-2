@@ -32,9 +32,26 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-import dateutil.parser
+import json
 
 from gw2.currencies import Coins
+from gw2.rest import GuildWars2ApiV2
+
+import dateutil.parser
+
+def create_item_name_cache(progress_callback=None, api=None):
+	api = api or GuildWars2ApiV2()
+	item_ids = api.items()
+	item_names = {}
+	chunk = 50
+	total_items = len(item_ids)
+	for i in range(0, total_items, chunk):
+		items = api.items(ids=item_ids[i:i + chunk])
+		for item in items:
+			item_names[item['name']] = item['id']
+		if progress_callback:
+			progress_callback(i, total_items)
+	return item_names
 
 def index_by(items, key, value=None):
 	index = {}
