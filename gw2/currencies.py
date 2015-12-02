@@ -95,10 +95,34 @@ class Coins(object):
 		self._value = operator.sub(self._value, other)
 		return self
 
+	@classmethod
+	def from_string(cls, coins):
+		copper = 0
+		modifier = 1
+		if coins.startswith('-'):
+			coins = coins[1:]
+			modifier = -1
+		coins = coins.split(' ')
+		for token in coins:
+			if not token:
+				continue
+			if token.endswith('c'):
+				copper += int(token[:1])
+			elif token.endswith('s'):
+				copper += int(token[:1]) * 100
+			elif token.endswith('g'):
+				copper += int(token[:1]) * 10000
+			else:
+				raise ValueError("unknown token: '{0}'".format(token))
+		copper *= modifier
+		return cls(copper)
+
 	@staticmethod
 	def to_string(coins):
 		if isinstance(coins, Coins):
 			coins = coins._value
+		negative = coins < 0
+		coins = abs(coins)
 		copper = coins % 100
 		coins //= 100
 		silver = coins % 100
@@ -110,4 +134,7 @@ class Coins(object):
 		if silver or gold:
 			value.append("{0}s".format(silver))
 		value.append("{0}c".format(copper))
-		return ' '.join(value)
+		value = ' '.join(value)
+		if negative:
+			value = '-' + value
+		return value
