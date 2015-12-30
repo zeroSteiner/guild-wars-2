@@ -107,11 +107,11 @@ class Coins(object):
 			if not token:
 				continue
 			if token.endswith('c'):
-				copper += int(token[:1])
+				copper += int(token[:-1])
 			elif token.endswith('s'):
-				copper += int(token[:1]) * 100
+				copper += int(token[:-1]) * 100
 			elif token.endswith('g'):
-				copper += int(token[:1]) * 10000
+				copper += int(token[:-1]) * 10000
 			else:
 				raise ValueError("unknown token: '{0}'".format(token))
 		copper *= modifier
