@@ -72,8 +72,14 @@ class GuildWars2ApiV2(object):
 	def account_dyes(self):
 		return self._request('account/dyes')
 
+	def account_inventory(self):
+		return self._request('account/inventory')
+
 	def account_materials(self):
 		return self._request('account/materials')
+
+	def account_minis(self):
+		return self._request('account/minis')
 
 	def account_skins(self):
 		return self._request('account/skins')
@@ -144,11 +150,20 @@ class GuildWars2ApiV2(object):
 	def items(self, ids=None):
 		return self._request('items', params={'ids': _flatten_ids(ids)})
 
+	def legends(self, ids=None):
+		return self._request('legends', params={'ids': _flatten_ids(ids)})
+
 	def maps(self, ids=None):
 		return self._request('maps', params={'ids': _flatten_ids(ids)})
 
 	def materials(self, ids=None):
 		return self._request('materials', params={'ids': _flatten_ids(ids)})
+
+	def minis(self, ids=None):
+		return self._request('minis', params={'ids': _flatten_ids(ids)})
+
+	def professions(self, ids=None):
+		return self._request('professions', params={'ids': _flatten_ids(ids)})
 
 	def pvp_games(self, ids=None):
 		return self._request('pvp/games', params={'ids': _flatten_ids(ids)})
@@ -168,11 +183,17 @@ class GuildWars2ApiV2(object):
 	def recipes_search_output(self, ids=None):
 		return self._request('recipes/search', params={'output': _flatten_ids(ids)})
 
+	def skills(self, ids=None):
+		return self._request('skills', params={'ids': _flatten_ids(ids)})
+
 	def skins(self, ids=None):
 		return self._request('skins', params={'ids': _flatten_ids(ids)})
 
 	def specializations(self, ids=None):
 		return self._request('specializations', params={'ids': _flatten_ids(ids)})
+
+	def titles(self, ids=None):
+		return self._request('titles', params={'ids': _flatten_ids(ids)})
 
 	def tokeninfo(self):
 		return self._request('tokeninfo')
