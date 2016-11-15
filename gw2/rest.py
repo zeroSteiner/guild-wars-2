@@ -87,6 +87,21 @@ class GuildWars2ApiV2(object):
 	def account_wallet(self):
 		return self._request('account/wallet')
 
+	def achievements(self, ids=None):
+		return self._request('achievements', params={'ids': _flatten_ids(ids)})
+
+	def achievements_daily(self):
+		return self._request('achievements/daily')
+
+	def achievements_daily_tomorrow(self):
+		return self._request('achievements/daily/tomorrow')
+
+	def achievements_groups(self, ids=None):
+		return self._request('achievements/groups', params={'ids': _flatten_ids(ids)})
+
+	def achievements_categories(self, ids=None):
+		return self._request('achievements/categories', params={'ids': _flatten_ids(ids)})
+
 	def build(self):
 		return self._request('build')
 
